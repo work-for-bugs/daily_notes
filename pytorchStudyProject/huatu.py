@@ -83,27 +83,20 @@ def xiaorongshiyanduibi():
     # 创建图表
     plt.figure(figsize=(10, 6))
 
-    color_dict = {
-        'precision': '#1f77b4',  # 深蓝
-        'recall': '#2ca02c',     # 深绿
-        'accuracy': '#ff7f0e',   # 深橙
-        'f1_score': '#9467bd'    # 深紫
-    }
-
     # 透明度配置
     alpha_dim = 0.5  # 非完整模型的透明度
 
     # 绘制“完整模型”的柱状图
-    plt.bar(x[0] - 1.5*width, precision[0], width, label='Precision', color=color_dict['precision'], alpha=1)
-    plt.bar(x[0] - 0.5*width, recall[0], width, label='Recall', color=color_dict['recall'], alpha=1)
-    plt.bar(x[0] + 0.5*width, accuracy[0], width, label='Accuracy', color=color_dict['accuracy'], alpha=1)
-    plt.bar(x[0] + 1.5*width, f1_score[0], width, label='F1-Score', color=color_dict['f1_score'], alpha=1)
+    plt.bar(x[0] - 1.5*width, precision[0], width, label='Precision', alpha=1)
+    plt.bar(x[0] - 0.5*width, recall[0], width, label='Recall', alpha=1)
+    plt.bar(x[0] + 0.5*width, accuracy[0], width, label='Accuracy', alpha=1)
+    plt.bar(x[0] + 1.5*width, f1_score[0], width, label='F1-Score', alpha=1)
 
     # 绘制其他模型的柱状图，使用半透明效果
-    plt.bar(x[1:] - 1.5*width, precision[1:], width, color=color_dict['precision'], alpha=alpha_dim)
-    plt.bar(x[1:] - 0.5*width, recall[1:], width, color=color_dict['recall'], alpha=alpha_dim)
-    plt.bar(x[1:] + 0.5*width, accuracy[1:], width, color=color_dict['accuracy'], alpha=alpha_dim)
-    plt.bar(x[1:] + 1.5*width, f1_score[1:], width, color=color_dict['f1_score'], alpha=alpha_dim)
+    plt.bar(x[1:] - 1.5*width, precision[1:], width, alpha=alpha_dim)
+    plt.bar(x[1:] - 0.5*width, recall[1:], width, alpha=alpha_dim)
+    plt.bar(x[1:] + 0.5*width, accuracy[1:], width, alpha=alpha_dim)
+    plt.bar(x[1:] + 1.5*width, f1_score[1:], width, alpha=alpha_dim)
     # 设置标题和标签
     plt.title('消融研究结果对比')
     plt.xlabel('模型配置')
@@ -115,35 +108,49 @@ def xiaorongshiyanduibi():
     # 显示图例
     plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
     plt.tight_layout()  # 自动调整布局以防止重叠
+
+    rects1 = plt.bar(x - width - width / 2, precision, width, label='Precision')
+    rects2 = plt.bar(x - width / 2, recall, width, label='Recall')
+    rects3 = plt.bar(x + width / 2, accuracy, width, label='Accuracy')
+    rects4 = plt.bar(x + width + width / 2, f1_score, width, label='F1-Score')
+    plt.bar_label(rects1, padding=3)  # 更加简单好用的api
+    plt.bar_label(rects2, padding=3)
+    plt.bar_label(rects3, padding=3)
+    plt.bar_label(rects4, padding=3)
+
+    # 设置y轴范围
+    plt.ylim(0.7, 1.0)
+
     # 显示图表
     plt.show()
 
+xiaorongshiyanduibi()
 
+def roc():
+    # 假设你有真实标签和两种模型的预测概率
+    y_true = [0, 1, 1, 0, 1, 0, 1, 0, 1, 0]  # 真实标签
 
-# 假设你有真实标签和两种模型的预测概率
-y_true = [0, 1, 1, 0, 1, 0, 1, 0, 1, 0]  # 真实标签
+    # 模型1的预测概率（自适应聚类前）
+    y_scores_before = [0.1, 0.4, 0.35, 0.2, 0.8, 0.3, 0.6, 0.4, 0.7, 0.1]
 
-# 模型1的预测概率（自适应聚类前）
-y_scores_before = [0.1, 0.4, 0.35, 0.2, 0.8, 0.3, 0.6, 0.4, 0.7, 0.1]
+    # 模型2的预测概率（自适应聚类后）
+    y_scores_after = [0.2, 0.5, 0.4, 0.3, 0.9, 0.4, 0.7, 0.5, 0.8, 0.2]
 
-# 模型2的预测概率（自适应聚类后）
-y_scores_after = [0.2, 0.5, 0.4, 0.3, 0.9, 0.4, 0.7, 0.5, 0.8, 0.2]
+    # 计算ROC曲线和AUC
+    fpr_before, tpr_before, _ = roc_curve(y_true, y_scores_before)
+    roc_auc_before = auc(fpr_before, tpr_before)
 
-# 计算ROC曲线和AUC
-fpr_before, tpr_before, _ = roc_curve(y_true, y_scores_before)
-roc_auc_before = auc(fpr_before, tpr_before)
+    fpr_after, tpr_after, _ = roc_curve(y_true, y_scores_after)
+    roc_auc_after = auc(fpr_after, tpr_after)
 
-fpr_after, tpr_after, _ = roc_curve(y_true, y_scores_after)
-roc_auc_after = auc(fpr_after, tpr_after)
-
-# 绘制ROC曲线
-plt.figure(figsize=(10, 6))
-plt.plot(fpr_before, tpr_before, color='blue', lw=2, label=f'Before Clustering (AUC = {roc_auc_before:.2f})')
-plt.plot(fpr_after, tpr_after, color='red', lw=2, label=f'After Clustering (AUC = {roc_auc_after:.2f})')
-plt.plot([0, 1], [0, 1], color='grey', linestyle='--')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('ROC Curve - Adaptive Clustering Impact')
-plt.legend(loc='lower right')
-plt.grid(True)
-plt.show()
+    # 绘制ROC曲线
+    plt.figure(figsize=(10, 6))
+    plt.plot(fpr_before, tpr_before, color='blue', lw=2, label=f'Before Clustering (AUC = {roc_auc_before:.2f})')
+    plt.plot(fpr_after, tpr_after, color='red', lw=2, label=f'After Clustering (AUC = {roc_auc_after:.2f})')
+    plt.plot([0, 1], [0, 1], color='grey', linestyle='--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve - Adaptive Clustering Impact')
+    plt.legend(loc='lower right')
+    plt.grid(True)
+    plt.show()
